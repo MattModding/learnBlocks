@@ -1,8 +1,11 @@
 package mattwamm.learnblocks.common.blocks;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
+import mattwamm.learnblocks.common.blocks.blockentities.BlockEntityTypes;
+import mattwamm.learnblocks.common.blocks.blockentities.MachineBlockEntity;
+import net.minecraft.block.*;
+import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.block.entity.BlockEntityTicker;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
@@ -10,18 +13,15 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
-public class MachineBlock extends Block {
+public class MachineBlock extends BlockWithEntity implements BlockEntityProvider {
 
     public static final BooleanProperty CHARGED = BooleanProperty.of("charged");
 
@@ -55,12 +55,29 @@ public class MachineBlock extends Block {
     public void onSteppedOn(World world, BlockPos pos, BlockState state, Entity entity) {
         if (world.getBlockState(pos).get(CHARGED)){
             // Summoning the Lighting Bolt at the block
-            LightningEntity lightningEntity = (LightningEntity) EntityType.LIGHTNING_BOLT.create(world);
+            LightningEntity lightningEntity = EntityType.LIGHTNING_BOLT.create(world);
+            assert lightningEntity != null;
             lightningEntity.refreshPositionAfterTeleport(Vec3d.ofBottomCenter(pos));
             world.spawnEntity(lightningEntity);
         }
 
         world.setBlockState(pos, state.with(CHARGED, false));
         super.onSteppedOn(world, pos, state, entity);
+    }
+
+    @Nullable
+    @Override
+    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return new MachineBlockEntity(pos,state);
+    }
+
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        // With inheriting from BlockWithEntity this defaults to INVISIBLE, so we need to change that!
+        return BlockRenderType.MODEL;
+    }
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
+        return checkType(type, BlockEntityTypes.MACHINE_BLOCK_ENTITY, MachineBlockEntity::tick);
     }
 }

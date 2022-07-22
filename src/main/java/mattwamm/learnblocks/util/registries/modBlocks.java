@@ -8,6 +8,8 @@ import net.minecraft.block.Material;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 
+import static mattwamm.learnblocks.common.blocks.blockentities.BlockEntityTypes.registerBlockEntityTypes;
+
 
 public class modBlocks {
 
@@ -17,6 +19,9 @@ public class modBlocks {
     public static void registerBlocks(){
         registerBlock("machine", MACHINE);
 
+
+        //finally register all BlockEntityTypes
+        registerBlockEntityTypes();
     }
 
     private static void registerBlock(String name, Block block)
