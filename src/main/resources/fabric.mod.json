@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "learnblocks",
+  "version": "${version}",
+  "name": "Learnblocks",
+  "description": "",
+  "authors": [
+    "mattwamm"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/learnblocks/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "mattwamm.learnblocks.client.LearnBlocksClient"
+    ],
+    "main": [
+      "mattwamm.learnblocks.LearnBlocks"
+    ]
+  },
+  "mixins": [
+    "learnblocks.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.8",
+    "fabric": "*",
+    "minecraft": "1.19"
+  }
+}

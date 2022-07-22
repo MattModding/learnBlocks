@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "charged=false": { "model": "learnblocks:block/machine" },
+    "charged=true": { "model": "learnblocks:block/machine_charged" }
+  }
+}
+
