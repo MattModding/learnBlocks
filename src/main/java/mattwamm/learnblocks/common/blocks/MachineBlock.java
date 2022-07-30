@@ -1,7 +1,7 @@
 package mattwamm.learnblocks.common.blocks;
 
-import mattwamm.learnblocks.common.blocks.blockentities.BlockEntityTypes;
-import mattwamm.learnblocks.common.blocks.blockentities.MachineBlockEntity;
+import mattwamm.learnblocks.util.registries.BlockEntityTypes;
+import mattwamm.learnblocks.common.blocks.entity.MachineBlockEntity;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
@@ -10,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
@@ -27,12 +28,11 @@ public class MachineBlock extends BlockWithEntity implements BlockEntityProvider
 
     public MachineBlock(Settings settings) {
         super(settings);
-        setDefaultState(getStateManager().getDefaultState().with(
-                CHARGED,false
-        )
+        setDefaultState(getStateManager().getDefaultState()
+                .with(CHARGED,false)
         );
     }
-
+    //to add properties for blockstates WARNING: every possibility is registered at start.
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
         builder.add(CHARGED);
@@ -46,10 +46,45 @@ public class MachineBlock extends BlockWithEntity implements BlockEntityProvider
 
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        player.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE,1,1);
         world.setBlockState(pos,state.with(CHARGED,true));
+        player.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE,1,1);
+        if(world.isClient) return ActionResult.SUCCESS;
+
+        Inventory blockEntity = (Inventory) world.getBlockEntity(pos);
+
+        if (!player.getStackInHand(hand).isEmpty()) {
+            // Check what is the first open slot and put an item from the player's hand there
+            if (blockEntity.getStack(0).isEmpty()) {
+                // Put the stack the player is holding into the inventory
+                blockEntity.setStack(0, player.getStackInHand(hand).copy());
+                // Remove the stack from the player's hand
+                player.getStackInHand(hand).setCount(0);
+            } else if (blockEntity.getStack(1).isEmpty()) {
+                blockEntity.setStack(1, player.getStackInHand(hand).copy());
+                player.getStackInHand(hand).setCount(0);
+            } else {
+                // If the inventory is full we'll print it's contents
+                System.out.println("The first slot holds "
+                        + blockEntity.getStack(0) + " and the second slot holds " + blockEntity.getStack(1));
+            }
+        }else {
+            // If the player is not holding anything we'll get give him the items in the block entity one by one
+
+            // Find the first slot that has an item and give it to the player
+            if (!blockEntity.getStack(1).isEmpty()) {
+                // Give the player the stack in the inventory
+                player.getInventory().offerOrDrop(blockEntity.getStack(1));
+                // Remove the stack from the inventory
+                blockEntity.removeStack(1);
+            } else if (!blockEntity.getStack(0).isEmpty()) {
+                player.getInventory().offerOrDrop(blockEntity.getStack(0));
+                blockEntity.removeStack(0);
+            }
+        }
         return ActionResult.SUCCESS;
+
     }
+
 
     @Override
     public void onSteppedOn(World world, BlockPos pos, BlockState state, Entity entity) {
@@ -76,6 +111,7 @@ public class MachineBlock extends BlockWithEntity implements BlockEntityProvider
         // With inheriting from BlockWithEntity this defaults to INVISIBLE, so we need to change that!
         return BlockRenderType.MODEL;
     }
+
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
         return checkType(type, BlockEntityTypes.MACHINE_BLOCK_ENTITY, MachineBlockEntity::tick);

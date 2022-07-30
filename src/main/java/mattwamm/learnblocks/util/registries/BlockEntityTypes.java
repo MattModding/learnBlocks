@@ -1,22 +1,22 @@
-package mattwamm.learnblocks.common.blocks.blockentities;
+package mattwamm.learnblocks.util.registries;
 
 import mattwamm.learnblocks.LearnBlocks;
-import mattwamm.learnblocks.common.blocks.blockentities.MachineBlockEntity;
-import mattwamm.learnblocks.util.registries.modBlocks;
+import mattwamm.learnblocks.common.blocks.entity.MachineBlockEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.Identifier;
 
-import static mattwamm.learnblocks.util.registries.modBlocks.MACHINE;
+import static mattwamm.learnblocks.util.registries.ModBlocks.MACHINE;
+import static mattwamm.learnblocks.util.registries.ModBlocks.MACHINE_INVENTORY;
 
 public class BlockEntityTypes {
 
     public static BlockEntityType<MachineBlockEntity> MACHINE_BLOCK_ENTITY;
-
+    public static BlockEntityType<MachineBlockEntity> MACHINE_BLOCK_INVENTORY_ENTITY;
     public static void registerBlockEntityTypes(){
         MACHINE_BLOCK_ENTITY = registerBlockEntityType("machineblockentity", FabricBlockEntityTypeBuilder.create(MachineBlockEntity::new, MACHINE).build(null));
+        MACHINE_BLOCK_INVENTORY_ENTITY = registerBlockEntityType("machineblockinventoryentity", FabricBlockEntityTypeBuilder.create(MachineBlockEntity::new, MACHINE_INVENTORY).build(null));
     }
 
 

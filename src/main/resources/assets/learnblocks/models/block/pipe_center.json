@@ -1,0 +1,21 @@
+{
+  "credit": "Made with Blockbench by Matt",
+  "textures": {
+    "center": "learnblocks:block/pipe",
+    "particle": "learnblocks:block/pipe"
+  },
+  "elements": [
+    {
+      "from": [6, 6, 6],
+      "to": [10, 10, 10],
+      "faces": {
+        "north": {"uv": [0, 0, 4, 4], "texture": "#center"},
+        "east": {"uv": [0, 0, 4, 4], "texture": "#center"},
+        "south": {"uv": [0, 0, 4, 4], "texture": "#center"},
+        "west": {"uv": [0, 0, 4, 4], "texture": "#center"},
+        "up": {"uv": [4, 4, 0, 0], "texture": "#center"},
+        "down": {"uv": [4, 0, 0, 4], "texture": "#center"}
+      }
+    }
+  ]
+}

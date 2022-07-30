@@ -1,6 +1,7 @@
 package mattwamm.learnblocks;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.minecraft.client.MinecraftClient;
 
 import static mattwamm.learnblocks.util.ModRegistries.mainRegister;
