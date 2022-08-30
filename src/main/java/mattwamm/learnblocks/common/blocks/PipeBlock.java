@@ -2,14 +2,19 @@ package mattwamm.learnblocks.common.blocks;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import mattwamm.learnblocks.common.blocks.entity.PipeBlockEntity;
 import mattwamm.learnblocks.common.blocks.interfaces.IPipeConnectable;
 import net.minecraft.block.*;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.fluid.FluidState;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.*;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.state.property.Properties;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -26,13 +31,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public class PipeBlock extends Block implements IPipeConnectable {
+public class PipeBlock extends PipeConnectableEntityBlock implements Waterloggable {
     public static final BooleanProperty UP = BooleanProperty.of("up");
     public static final BooleanProperty DOWN = BooleanProperty.of("down");
     public static final BooleanProperty NORTH = BooleanProperty.of("north");
     public static final BooleanProperty EAST = BooleanProperty.of("east");
     public static final BooleanProperty SOUTH = BooleanProperty.of("south");
     public static final BooleanProperty WEST = BooleanProperty.of("west");
+    public static final BooleanProperty WATERLOGGED = Properties.WATERLOGGED;
     private static final VoxelShape DEFAULT_SHAPE  = Block.createCuboidShape(6.0, 6.0, 6.0, 10, 10, 10);
     private static final Map<BlockState, VoxelShape> OUTLINE_SHAPES = Maps.newHashMap();
     private static final Map<Direction, VoxelShape> HORIZONTAL_SHAPES = ImmutableMap.of(
@@ -61,6 +67,7 @@ public class PipeBlock extends Block implements IPipeConnectable {
                 .with(EAST,false)
                 .with(SOUTH, false)
                 .with(WEST, false)
+                .with(WATERLOGGED, false)
         );
         for (BlockState blockState : this.getStateManager().getStates()) {
             OUTLINE_SHAPES.put(blockState, this.getShapeForState(blockState));
@@ -75,6 +82,7 @@ public class PipeBlock extends Block implements IPipeConnectable {
         builder.add(EAST);
         builder.add(SOUTH);
         builder.add(WEST);
+        builder.add(WATERLOGGED);
     }
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
@@ -107,17 +115,14 @@ public class PipeBlock extends Block implements IPipeConnectable {
                 world.setBlockState(pos.offset(hit.getSide()) ,offset.with(DIRECTION_TO_PIPE_CONNECTION.get(hit.getSide().getOpposite()),!sideValue));
         }else{
             world.setBlockState(pos, state.with(property, !sideValue));
+            BlockState offset = world.getBlockState(pos.offset(hit.getSide()));
+            if(offset.getBlock() instanceof PipeBlock)
+                world.setBlockState(pos.offset(hit.getSide()) ,offset.with(DIRECTION_TO_PIPE_CONNECTION.get(hit.getSide().getOpposite()),!sideValue));
         }
         if (handBlock != null) {
             handBlock.place(context);
         }
         return ActionResult.SUCCESS;
-    }
-
-    @Override
-    public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
-
-        neighborUpdate(state,world,pos,this,pos,true);
     }
 
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
@@ -126,7 +131,7 @@ public class PipeBlock extends Block implements IPipeConnectable {
 
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return this.getPlacementState(ctx.getWorld(), this.getDefaultState(), ctx.getBlockPos(), ctx.getSide());
+        return this.getPlacementState(ctx.getWorld(), this.getDefaultState(), ctx.getBlockPos(), ctx.getSide()).with(WATERLOGGED, ctx.getWorld().getFluidState(ctx.getBlockPos()).getFluid() == Fluids.WATER);
     }
 
     private BlockState getPlacementState(BlockView world, BlockState state, BlockPos pos, Direction hitSide) {
@@ -143,6 +148,10 @@ public class PipeBlock extends Block implements IPipeConnectable {
         return state;
     }
 
+    @Override
+    public FluidState getFluidState(BlockState state) {
+        return state.get(WATERLOGGED) ? Fluids.WATER.getStill(false) : super.getFluidState(state);
+    }
 
     private VoxelShape getShapeForState(BlockState state) {
         VoxelShape voxelShape = DEFAULT_SHAPE;
@@ -154,6 +163,20 @@ public class PipeBlock extends Block implements IPipeConnectable {
             }
         }
         return voxelShape;
+    }
+
+    @Override
+    public @Nullable BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+        return new PipeBlockEntity(pos,state);
+    }
+
+    @Override
+    public BlockState getStateForNeighborUpdate(BlockState state, Direction direction, BlockState neighborState, WorldAccess world, BlockPos pos, BlockPos neighborPos) {
+        if (state.get(WATERLOGGED)) {
+            // This is for 1.17 and below: world.getFluidTickScheduler().schedule(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+            world.createAndScheduleFluidTick(pos, Fluids.WATER, Fluids.WATER.getTickRate(world));
+        }
+        return super.getStateForNeighborUpdate(state, direction, neighborState, world, pos, neighborPos);
     }
 
     @Override

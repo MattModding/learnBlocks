@@ -11,6 +11,10 @@ public class ModRegistries {
      registerBlocks();
      registerBlockEntityTypes();
      registerItems();
+
+
+
+
     }
 
 

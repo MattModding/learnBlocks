@@ -64,8 +64,8 @@ public class MachineBlock extends BlockWithEntity implements BlockEntityProvider
                 player.getStackInHand(hand).setCount(0);
             } else {
                 // If the inventory is full we'll print it's contents
-                System.out.println("The first slot holds "
-                        + blockEntity.getStack(0) + " and the second slot holds " + blockEntity.getStack(1));
+                System.out.println(String.format("The first slot holds {0}"
+                        + blockEntity.getStack(0) + " and the second slot holds " + blockEntity.getStack(1)));
             }
         }else {
             // If the player is not holding anything we'll get give him the items in the block entity one by one
